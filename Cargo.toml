@@ -1,0 +1,23 @@
+[package]
+name = "windough"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.79"
+clap = { version = "4.4.18", features = ["derive"] }
+directories = "5.0.1"
+lazy_static = "1.4.0"
+regex = "1.10.3"
+serde = { version = "1.0.196", features = ["derive"] }
+serde_json = "1.0.113"
+toml = "0.8.10"
+winapi = { version = "0.3.9", features = [
+    "winuser",
+    "errhandlingapi",
+    "processthreadsapi",
+    "psapi",
+    "handleapi",
+    "libloaderapi",
+    "shellapi",
+] }

@@ -1,0 +1,155 @@
+mod commands;
+mod data;
+#[macro_use]
+mod utils;
+
+use anyhow::Context;
+use clap::{Parser, Subcommand};
+use directories::ProjectDirs;
+use lazy_static::lazy_static;
+use std::process::exit;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
+
+#[derive(Parser)]
+#[command(
+    about = "An easy-to-use command-line utility for saving and loading window arrangements on Windows",
+    author = "SirGolem",
+    version
+)]
+struct Args {
+    #[command(subcommand)]
+    command: Command,
+
+    #[arg(short, long, default_value_t = false, help = "Enable verbose logging")]
+    verbose: bool,
+}
+
+#[derive(Subcommand)]
+enum Command {
+    #[command(about = "Save the current arrangement of open windows")]
+    Save {
+        /// Name to save arrangement as
+        name: String,
+    },
+    #[command(about = "Load a saved window arrangement")]
+    Load {
+        /// Name of arrangement to load
+        name: String,
+
+        #[arg(
+            long,
+            default_value_t = false,
+            help = "Close windows that are not in the arrangement"
+        )]
+        close_others: bool,
+        #[arg(
+            long,
+            default_value_t = false,
+            help = "Minimize windows that are not in the arrangement"
+        )]
+        minimize_others: bool,
+    },
+    #[command(about = "Remove a saved window arrangement")]
+    Remove {
+        /// Name of arrangement to remove
+        name: String,
+    },
+    #[command(about = "List saved arrangements")]
+    List,
+    #[command(about = "Clear Windough data (default - saved arrangements)")]
+    Clear {
+        #[arg(
+            short,
+            long,
+            default_value_t = false,
+            help = "Delete the root directory (all data, config, etc.)"
+        )]
+        all: bool,
+    },
+    #[command(about = "Open a directory in File Explorer")]
+    OpenDir {
+        #[arg(
+            short,
+            long,
+            default_value_t = false,
+            help = "Open the root directory (default)"
+        )]
+        root: bool,
+        #[arg(
+            short,
+            long,
+            default_value_t = false,
+            help = "Open the data directory (where arrangements are saved)"
+        )]
+        data: bool,
+    },
+}
+
+lazy_static! {
+    static ref PROJECT_DIRS: Arc<ProjectDirs> = Arc::new(
+        ProjectDirs::from(
+            if cfg!(debug_assertions) { "dev" } else { "com" },
+            "SirGolem",
+            if cfg!(debug_assertions) {
+                "Windough-Dev"
+            } else {
+                "Windough"
+            }
+        )
+        .unwrap_or_else(|| {
+            printerror!("error finding project directory");
+            exit(1);
+        })
+    );
+}
+
+static VERBOSE: AtomicBool = AtomicBool::new(false);
+pub fn verbose() -> bool {
+    VERBOSE.load(Ordering::Relaxed)
+}
+
+fn main() {
+    if !cfg!(windows) {
+        printerror!("cannot run on this OS - only Windows is supported");
+        return;
+    }
+
+    let args = Args::parse();
+    VERBOSE.store(args.verbose, Ordering::Relaxed);
+
+    let command_result = match args.command {
+        Command::Save { name } => {
+            commands::save(name).with_context(|| "error saving window arragement")
+        }
+        Command::Load {
+            name,
+            close_others,
+            minimize_others,
+        } => commands::load(name, close_others, minimize_others)
+            .with_context(|| "error loading window arrangement"),
+        Command::Remove { name } => {
+            commands::remove(name).with_context(|| "error removing window arrangement")
+        }
+        Command::List => commands::list().with_context(|| "error listing saved arrangements"),
+        Command::Clear { all } => commands::clear(all).with_context(|| "error clearing data"),
+        Command::OpenDir { root, data } => {
+            commands::open_dir(root, data).with_context(|| "error opening directory")
+        }
+    };
+    match command_result {
+        Ok(_) => (),
+        Err(error) => {
+            if verbose() {
+                printerror!("{:#}", error);
+            } else {
+                match error.source() {
+                    Some(source) => printerror!("{}: {}", error, source),
+                    None => printerror!("{}", error),
+                }
+            }
+        }
+    }
+}

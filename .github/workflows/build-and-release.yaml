@@ -1,0 +1,32 @@
+name: Build and Release
+
+on:
+    workflow_run:
+        branches: main
+        workflows: 'Format-Lint-and-Test'
+        types: completed
+
+env:
+    CARGO_TERM_COLOR: always
+
+permissions:
+    contents: write
+
+jobs:
+    build-and-release:
+        name: Build and Release
+        runs-on: windows-latest
+        if: github.event.workflow_run.conclusion == 'success'
+        steps:
+            - uses: actions/checkout@v4
+            - name: Build
+              run: cargo build --release --verbose
+            - name: Create release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  (Get-Content -Path Cargo.toml -Raw) -match 'name\s*=\s*"(.*?)"'
+                  $name = $matches[1]
+                  (Get-Content -Path Cargo.toml -Raw) -match 'version\s*=\s*"(.*?)"'
+                  $version = $matches[1]
+                  gh release create "v$version" "target/release/$name.exe" --generate-notes
