@@ -20,3 +20,14 @@ An easy-to-use command-line utility for saving and loading window arrangements o
 -   From parent directory: `windough.exe <command>` or `./windough.exe <command>`
 
 Run `windough help` for a list of commands and arguments
+
+## Configuration
+
+The Windough configuration file (`config.json`) can be found in the config directory opened by `windough open-dir --config`
+
+### Values
+
+-   **retry_count** (usize) - A positive integer that determines how many times repositioning and resizing of windows will be attempted
+    -   Default: `5`
+-   **retry_interval** (usize) - A positive integer that determines how long will be waited (in milliseconds) between each attempt to reposition and resize windows
+    -   Default: `750`

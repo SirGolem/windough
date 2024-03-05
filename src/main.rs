@@ -1,10 +1,12 @@
 mod commands;
+mod config;
 mod data;
 #[macro_use]
 mod utils;
 
 use anyhow::Context;
 use clap::{Parser, Subcommand};
+use config::{get_config, ConfigData};
 use directories::ProjectDirs;
 use lazy_static::lazy_static;
 use std::process::exit;
@@ -85,6 +87,13 @@ enum Command {
             help = "Open the data directory (where arrangements are saved)"
         )]
         data: bool,
+        #[arg(
+            short,
+            long,
+            default_value_t = false,
+            help = "Open the config directory"
+        )]
+        config: bool,
     },
 }
 
@@ -103,6 +112,14 @@ lazy_static! {
             printerror!("error finding project directory");
             exit(1);
         })
+    );
+    static ref CONFIG: Arc<ConfigData> = Arc::new(
+        get_config()
+            .with_context(|| "error loading config")
+            .unwrap_or_else(|error| {
+                printerror!("{:#}", error);
+                exit(1);
+            })
     );
 }
 
@@ -135,15 +152,15 @@ fn main() {
         }
         Command::List => commands::list().with_context(|| "error listing saved arrangements"),
         Command::Clear { all } => commands::clear(all).with_context(|| "error clearing data"),
-        Command::OpenDir { root, data } => {
-            commands::open_dir(root, data).with_context(|| "error opening directory")
+        Command::OpenDir { root, data, config } => {
+            commands::open_dir(root, data, config).with_context(|| "error opening directory")
         }
     };
     match command_result {
         Ok(_) => (),
         Err(error) => {
             if verbose() {
-                printerror!("{:#}", error);
+                printerror!("{:?}", error);
             } else {
                 match error.source() {
                     Some(source) => printerror!("{}: {}", error, source),

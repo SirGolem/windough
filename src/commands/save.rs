@@ -63,6 +63,8 @@ pub fn save(name: String) -> Result<()> {
         window_data.push(WindowDataEntry {
             application_path: module_path,
             application_args: Vec::new(),
+            launch: true,
+            reposition: true,
             position: WindowPosition {
                 top: window_rect.top,
                 left: window_rect.left,

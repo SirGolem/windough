@@ -14,14 +14,20 @@ use winapi::{
     um::{errhandlingapi::GetLastError, shellapi::ShellExecuteW, winuser::SW_NORMAL},
 };
 
-pub fn open_dir(root: bool, data: bool) -> Result<()> {
+pub fn open_dir(root: bool, data: bool, config: bool) -> Result<()> {
     let path: String;
 
-    if root || !data {
+    if root {
         path = get_root_dir_path().with_context(|| "Failed to get root directory path")?;
     } else if data {
         let data_path_option = PROJECT_DIRS.data_dir().to_str();
         path = match data_path_option {
+            Some(data) => data.to_string(),
+            None => bail!("Conversion of path to string failed"),
+        };
+    } else if config {
+        let config_path_option = PROJECT_DIRS.config_dir().to_str();
+        path = match config_path_option {
             Some(data) => data.to_string(),
             None => bail!("Conversion of path to string failed"),
         };

@@ -10,6 +10,8 @@ pub struct WindowData {
 pub struct WindowDataEntry {
     pub application_path: String,
     pub application_args: Vec<String>,
+    pub launch: bool,
+    pub reposition: bool,
     pub position: WindowPosition,
     pub size: WindowSize,
     pub minimized: bool,

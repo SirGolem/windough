@@ -6,7 +6,7 @@ use crate::{
         get_running_process_ids, launch_application, reposition_and_resize_window, resource_exists,
         validate_name, ResourceType,
     },
-    verbose, PROJECT_DIRS,
+    verbose, CONFIG, PROJECT_DIRS,
 };
 use anyhow::{ensure, Context, Result};
 use std::{fs, iter, thread::sleep, time::Duration};
@@ -14,9 +14,6 @@ use winapi::{
     shared::windef::HWND,
     um::winuser::{PostMessageW, ShowWindow, SW_MAXIMIZE, SW_MINIMIZE, WM_CLOSE},
 };
-
-const RETRY_COUNT: isize = 5;
-const RETRY_INTERVAL: Duration = Duration::from_millis(750);
 
 pub fn load(name: String, close_others: bool, minimize_others: bool) -> Result<()> {
     validate_name(&name)?;
@@ -42,7 +39,7 @@ pub fn load(name: String, close_others: bool, minimize_others: bool) -> Result<(
 
     // Launch Applications
     for window in &window_data.data {
-        if !running_module_paths.contains(&Some(window.application_path.clone())) {
+        if window.launch && !running_module_paths.contains(&Some(window.application_path.clone())) {
             match launch_application(&window.application_path, &window.application_args) {
                 Ok(_) => (),
                 Err(error) => {
@@ -58,8 +55,8 @@ pub fn load(name: String, close_others: bool, minimize_others: bool) -> Result<(
     let mut windows_to_retry = Vec::from_iter(iter::repeat(true).take(window_data.data.len()));
     let mut windows_to_ignore: Vec<HWND> = Vec::new();
 
-    while retry_attempts < RETRY_COUNT && windows_to_retry.contains(&true) {
-        sleep(RETRY_INTERVAL);
+    while retry_attempts < CONFIG.retry_count && windows_to_retry.contains(&true) {
+        sleep(Duration::from_millis(CONFIG.retry_interval as u64));
 
         let open_windows = get_open_windows()?;
 
@@ -99,6 +96,10 @@ pub fn load(name: String, close_others: bool, minimize_others: bool) -> Result<(
 
             let window = &window_data.data[window_data_index];
             windows_to_retry[window_data_index] = false;
+
+            if !window.reposition {
+                continue;
+            }
 
             reposition_and_resize_window(hwnd, &window.position, &window.size)?;
 
