@@ -32,7 +32,7 @@ pub fn open_dir(root: bool, data: bool, config: bool) -> Result<()> {
             None => bail!("Conversion of path to string failed"),
         };
     } else {
-        bail!("Target directory incorrectly determined - this may be a bug");
+        path = get_root_dir_path().with_context(|| "Failed to get root directory path")?;
     }
 
     resource_exists(Path::new(&path), ResourceType::Dir, true)?;
