@@ -2,9 +2,9 @@ use crate::{
     data::WindowData,
     printwarning,
     utils::{
-        get_module_path_from_window, get_module_paths_from_process_ids, get_open_windows,
-        get_running_process_ids, launch_application, reposition_and_resize_window, resource_exists,
-        validate_name, ResourceType,
+        get_module_path_from_window, get_module_paths_from_windows, get_open_windows,
+        launch_application, reposition_and_resize_window, resource_exists, validate_name,
+        ResourceType,
     },
     verbose, CONFIG, PROJECT_DIRS,
 };
@@ -12,7 +12,9 @@ use anyhow::{ensure, Context, Result};
 use std::{fs, iter, thread::sleep, time::Duration};
 use winapi::{
     shared::windef::HWND,
-    um::winuser::{PostMessageW, ShowWindow, SW_MAXIMIZE, SW_MINIMIZE, WM_CLOSE},
+    um::winuser::{
+        IsZoomed, PostMessageW, ShowWindow, SW_MAXIMIZE, SW_MINIMIZE, SW_RESTORE, WM_CLOSE,
+    },
 };
 
 pub fn load(name: String, close_others: bool, minimize_others: bool) -> Result<()> {
@@ -34,8 +36,8 @@ pub fn load(name: String, close_others: bool, minimize_others: bool) -> Result<(
         "'name' property in file does not match expected name"
     );
 
-    let running_process_ids = get_running_process_ids()?;
-    let running_module_paths = get_module_paths_from_process_ids(running_process_ids);
+    let initial_open_windows = get_open_windows()?;
+    let running_module_paths = get_module_paths_from_windows(&initial_open_windows);
 
     // Launch Applications
     for window in &window_data.data {
@@ -99,6 +101,15 @@ pub fn load(name: String, close_others: bool, minimize_others: bool) -> Result<(
 
             if !window.reposition {
                 continue;
+            }
+
+            unsafe {
+                // Restore window to visible position
+                ShowWindow(hwnd, SW_RESTORE);
+                // Un-maximize window so it can be moved properly
+                if IsZoomed(hwnd) != 0 {
+                    ShowWindow(hwnd, SW_RESTORE);
+                }
             }
 
             reposition_and_resize_window(hwnd, &window.position, &window.size)?;
