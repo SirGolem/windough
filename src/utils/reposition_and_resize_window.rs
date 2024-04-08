@@ -1,10 +1,13 @@
-use crate::data::{WindowPosition, WindowSize};
+use crate::{
+    data::{WindowPosition, WindowSize},
+    utils::get_module_path_from_window,
+};
 use anyhow::{bail, Result};
 use winapi::{
     shared::windef::HWND,
     um::{
         errhandlingapi::GetLastError,
-        winuser::{SetWindowPos, HWND_TOP, SWP_NOZORDER},
+        winuser::{SetWindowPos, HWND_TOP},
     },
 };
 
@@ -24,6 +27,8 @@ pub fn reposition_and_resize_window(
     position: &WindowPosition,
     size: &WindowSize,
 ) -> Result<()> {
+    println!("{}", get_module_path_from_window(&hwnd)?);
+
     unsafe {
         if SetWindowPos(
             hwnd,
@@ -32,7 +37,7 @@ pub fn reposition_and_resize_window(
             position.top,
             size.width,
             size.height,
-            SWP_NOZORDER,
+            0,
         ) == 0
         {
             bail!(

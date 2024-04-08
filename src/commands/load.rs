@@ -54,7 +54,9 @@ pub fn load(name: String, close_others: bool, minimize_others: bool) -> Result<(
     }
 
     let mut retry_attempts = 0;
+    // For windows included in window_data
     let mut windows_to_retry = Vec::from_iter(iter::repeat(true).take(window_data.data.len()));
+    // For other windows (not in window_data)
     let mut windows_to_ignore: Vec<HWND> = Vec::new();
 
     while retry_attempts < CONFIG.retry_count && windows_to_retry.contains(&true) {
@@ -95,6 +97,10 @@ pub fn load(name: String, close_others: bool, minimize_others: bool) -> Result<(
                     continue;
                 }
             };
+
+            if !windows_to_retry[window_data_index] {
+                continue;
+            }
 
             let window = &window_data.data[window_data_index];
             windows_to_retry[window_data_index] = false;
