@@ -53,6 +53,11 @@ enum Command {
             help = "Minimize windows that are not in the arrangement"
         )]
         minimize_others: bool,
+
+        #[arg(long, help = "Override the 'retry_count' configuration value")]
+        retry_count: Option<usize>,
+        #[arg(long, help = "Override the 'retry_interval' configuration value")]
+        retry_interval: Option<usize>,
     },
     #[command(about = "Remove a saved window arrangement")]
     Remove {
@@ -145,8 +150,16 @@ fn main() {
             name,
             close_others,
             minimize_others,
-        } => commands::load(name, close_others, minimize_others)
-            .with_context(|| "error loading window arrangement"),
+            retry_count,
+            retry_interval,
+        } => commands::load(
+            name,
+            close_others,
+            minimize_others,
+            retry_count,
+            retry_interval,
+        )
+        .with_context(|| "error loading window arrangement"),
         Command::Remove { name } => {
             commands::remove(name).with_context(|| "error removing window arrangement")
         }
