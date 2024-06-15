@@ -18,8 +18,7 @@ pub enum ResourceType {
 ///
 /// Returns an error if metadata could not be obtained or creation of a resource fails
 pub fn resource_exists(path: &Path, resourse_type: ResourceType, create: bool) -> Result<bool> {
-    let metadata_result = fs::metadata(path);
-    match metadata_result {
+    match fs::metadata(path) {
         Ok(metadata) => Ok(match resourse_type {
             ResourceType::Dir => metadata.is_dir(),
             ResourceType::File => metadata.is_file(),
