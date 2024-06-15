@@ -33,12 +33,12 @@ struct Args {
 enum Command {
     #[command(about = "Save the current arrangement of open windows")]
     Save {
-        /// Name to save arrangement as
+        /// Arrangement name
         name: String,
     },
     #[command(about = "Load a saved window arrangement")]
     Load {
-        /// Name of arrangement to load
+        /// Arrangement name
         name: String,
 
         #[arg(
@@ -56,7 +56,7 @@ enum Command {
     },
     #[command(about = "Remove a saved window arrangement")]
     Remove {
-        /// Name of arrangement to remove
+        /// Arrangement name
         name: String,
     },
     #[command(about = "List saved arrangements")]
