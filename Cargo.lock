@@ -246,6 +246,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "quit"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c090c608233d81bd6b90e718cf34506c60a10e633dff2292c3d1029e798d669b"
+dependencies = [
+ "quit_macros",
+]
+
+[[package]]
+name = "quit_macros"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d4b27a0dd5d08ad7af2d17952fb360ec9c30eeade0b32df7a3c9b099ff37564"
+
+[[package]]
 name = "quote"
 version = "1.0.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -460,6 +475,7 @@ dependencies = [
  "directories",
  "glob",
  "lazy_static",
+ "quit",
  "regex",
  "serde",
  "serde_json",

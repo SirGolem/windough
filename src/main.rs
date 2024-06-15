@@ -9,7 +9,6 @@ use clap::{Parser, Subcommand};
 use config::{get_config, ConfigData};
 use directories::ProjectDirs;
 use lazy_static::lazy_static;
-use std::process::exit;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
@@ -110,7 +109,7 @@ lazy_static! {
         )
         .unwrap_or_else(|| {
             printerror!("error finding project directory");
-            exit(1);
+            quit::with_code(1);
         })
     );
     static ref CONFIG: Arc<ConfigData> = Arc::new(
@@ -118,7 +117,7 @@ lazy_static! {
             .with_context(|| "error loading config")
             .unwrap_or_else(|error| {
                 printerror!("{:#}", error);
-                exit(1);
+                quit::with_code(1);
             })
     );
 }
@@ -128,6 +127,7 @@ pub fn verbose() -> bool {
     VERBOSE.load(Ordering::Relaxed)
 }
 
+#[quit::main]
 fn main() {
     if !cfg!(windows) {
         printerror!("cannot run on this OS - only Windows is supported");
