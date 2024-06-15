@@ -174,7 +174,7 @@ pub fn load(name: String, close_others: bool, minimize_others: bool) -> Result<(
                 }
             }
 
-            reposition_and_resize_window(hwnd, &window.position, &window.size)?;
+            reposition_and_resize_window(&hwnd, &window.position, &window.size)?;
 
             unsafe {
                 if window.maximised {

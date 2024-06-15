@@ -23,7 +23,7 @@ use winapi::{
 ///
 /// Returns an error if repositioning/resizing fails, which contains the Win32 error code
 pub fn reposition_and_resize_window(
-    hwnd: HWND,
+    hwnd: &HWND,
     position: &WindowPosition,
     size: &WindowSize,
 ) -> Result<()> {
@@ -31,7 +31,7 @@ pub fn reposition_and_resize_window(
 
     unsafe {
         if SetWindowPos(
-            hwnd,
+            *hwnd,
             HWND_TOP,
             position.left,
             position.top,
