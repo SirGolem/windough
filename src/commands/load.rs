@@ -17,7 +17,13 @@ use winapi::{
     },
 };
 
-pub fn load(name: String, close_others: bool, minimize_others: bool) -> Result<()> {
+pub fn load(
+    name: String,
+    close_others: bool,
+    minimize_others: bool,
+    retry_count_flag: Option<usize>,
+    retry_interval_flag: Option<usize>,
+) -> Result<()> {
     validate_name(&name)?;
 
     let file_path = PROJECT_DIRS.data_dir().join(format!("{}.json", name));
@@ -53,14 +59,25 @@ pub fn load(name: String, close_others: bool, minimize_others: bool) -> Result<(
         }
     }
 
+    let retry_count = match retry_count_flag {
+        Some(value) => value,
+        None => CONFIG.retry_count,
+    };
+    let retry_interval = match retry_interval_flag {
+        Some(value) => value,
+        None => CONFIG.retry_interval,
+    };
+
+    println!("{} {}", retry_count, retry_interval);
+
     let mut retry_attempts = 0;
     // For windows included in window_data
     let mut windows_to_retry = Vec::from_iter(iter::repeat(true).take(window_data.data.len()));
     // For other windows (not in window_data)
     let mut windows_to_ignore: Vec<HWND> = Vec::new();
 
-    while retry_attempts < CONFIG.retry_count && windows_to_retry.contains(&true) {
-        sleep(Duration::from_millis(CONFIG.retry_interval as u64));
+    while retry_attempts < retry_count && windows_to_retry.contains(&true) {
+        sleep(Duration::from_millis(retry_interval as u64));
 
         let open_windows = get_open_windows()?;
 
