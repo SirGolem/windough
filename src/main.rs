@@ -61,8 +61,8 @@ enum Command {
     },
     #[command(about = "List saved arrangements")]
     List,
-    #[command(about = "Clear Windough data (default - saved arrangements)")]
-    Clear {
+    #[command(about = "Clean Windough data (default - saved arrangements)")]
+    Clean {
         #[arg(
             short,
             long,
@@ -151,7 +151,7 @@ fn main() {
             commands::remove(name).with_context(|| "error removing window arrangement")
         }
         Command::List => commands::list().with_context(|| "error listing saved arrangements"),
-        Command::Clear { all } => commands::clear(all).with_context(|| "error clearing data"),
+        Command::Clean { all } => commands::clean(all).with_context(|| "error cleaning data"),
         Command::OpenDir { root, data, config } => {
             commands::open_dir(root, data, config).with_context(|| "error opening directory")
         }

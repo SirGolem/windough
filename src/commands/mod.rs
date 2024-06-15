@@ -1,11 +1,11 @@
-mod clear;
+mod clean;
 mod list;
 mod load;
 mod open_dir;
 mod remove;
 mod save;
 
-pub use clear::clear;
+pub use clean::clean;
 pub use list::list;
 pub use load::load;
 pub use open_dir::open_dir;
