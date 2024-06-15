@@ -9,7 +9,8 @@ use crate::{
     verbose, CONFIG, PROJECT_DIRS,
 };
 use anyhow::{ensure, Context, Result};
-use std::{fs, iter, thread::sleep, time::Duration};
+use glob::{glob, Pattern};
+use std::{cmp::min, fs, iter, path::PathBuf, thread::sleep, time::Duration};
 use winapi::{
     shared::windef::HWND,
     um::winuser::{
@@ -41,12 +42,54 @@ pub fn load(name: String, close_others: bool, minimize_others: bool) -> Result<(
 
     // Launch Applications
     for window in &window_data.data {
-        if window.launch && !running_module_paths.contains(&Some(window.application_path.clone())) {
-            match launch_application(&window.application_path, &window.application_args) {
-                Ok(_) => (),
-                Err(error) => {
-                    if verbose() {
-                        printwarning!("{:?}", error);
+        let matching_paths: Vec<PathBuf> = match glob(&window.application_path) {
+            Ok(paths) => paths.filter_map(Result::ok).collect(),
+            Err(err) => {
+                if verbose() {
+                    printwarning!(
+                        "failed to convert 'application_path' value to pattern for matching: {}",
+                        err.msg
+                    );
+                }
+                continue;
+            }
+        };
+
+        if matching_paths.is_empty() {
+            if verbose() {
+                printwarning!(
+                    "no files found matching 'application_path' value - skipping entry\nPath: {}",
+                    &window.application_path
+                );
+            }
+            continue;
+        }
+
+        let paths_to_launch = match window.resolve_multiple_paths {
+            true => matching_paths,
+            false => {
+                let mut paths_to_launch_vector = Vec::new();
+                paths_to_launch_vector.push(
+                    matching_paths[min(window.path_resolution_index, matching_paths.len() - 1)]
+                        .clone(),
+                );
+                paths_to_launch_vector
+            }
+        };
+
+        for path_to_launch in paths_to_launch {
+            if window.launch
+                && !running_module_paths.contains(&Some(path_to_launch.display().to_string()))
+            {
+                match launch_application(
+                    &path_to_launch.display().to_string(),
+                    &window.application_args,
+                ) {
+                    Ok(_) => (),
+                    Err(error) => {
+                        if verbose() {
+                            printwarning!("{:?}", error);
+                        }
                     }
                 }
             }
@@ -78,10 +121,23 @@ pub fn load(name: String, close_others: bool, minimize_others: bool) -> Result<(
                 continue;
             }
 
-            let window_data_index_option = window_data
-                .data
-                .iter()
-                .position(|data| module_path == data.application_path);
+            let mut window_data_index_option = None;
+            for (index, data) in window_data.data.iter().enumerate() {
+                let pattern = match Pattern::new(&data.application_path) {
+                    Ok(pattern) => pattern,
+                    Err(err) => {
+                        if verbose() {
+                            printwarning!("failed to convert 'application_path' value to pattern for matching: {}", err.msg);
+                        }
+                        continue;
+                    }
+                };
+
+                if pattern.matches(&module_path) {
+                    window_data_index_option = Some(index);
+                    break;
+                }
+            }
             let window_data_index = match window_data_index_option {
                 Some(data) => data,
                 None => {
