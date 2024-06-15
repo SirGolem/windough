@@ -163,7 +163,7 @@ fn main() {
                 printerror!("{:?}", error);
             } else {
                 match error.source() {
-                    Some(source) => printerror!("{}: {}", error, source),
+                    Some(_) => printerror!("{:#}", error),
                     None => printerror!("{}", error),
                 }
             }
