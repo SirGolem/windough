@@ -131,7 +131,7 @@ pub fn verbose() -> bool {
 fn main() {
     if !cfg!(windows) {
         printerror!("cannot run on this OS - only Windows is supported");
-        return;
+        quit::with_code(1);
     }
 
     let args = Args::parse();
@@ -167,6 +167,7 @@ fn main() {
                     None => printerror!("{}", error),
                 }
             }
+            quit::with_code(1);
         }
     }
 }
