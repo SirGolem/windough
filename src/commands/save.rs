@@ -1,5 +1,8 @@
 use crate::{
-    data::{WindowData, WindowDataEntry, WindowPosition, WindowSize},
+    data::{
+        launch_default, path_resolution_index_default, reposition_default,
+        resolve_multiple_paths_default, WindowData, WindowDataEntry, WindowPosition, WindowSize,
+    },
     utils::{
         get_module_paths_from_windows, get_open_windows, resource_exists, validate_name,
         ResourceType,
@@ -63,8 +66,10 @@ pub fn save(name: String) -> Result<()> {
         window_data.push(WindowDataEntry {
             application_path: module_path,
             application_args: Vec::new(),
-            launch: true,
-            reposition: true,
+            resolve_multiple_paths: resolve_multiple_paths_default(),
+            path_resolution_index: path_resolution_index_default(),
+            launch: launch_default(),
+            reposition: reposition_default(),
             position: WindowPosition {
                 top: window_rect.top,
                 left: window_rect.left,
