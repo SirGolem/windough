@@ -6,7 +6,7 @@ use crate::{
 use anyhow::{Context, Result};
 use std::{fs, path::Path};
 
-pub fn clear(all: bool) -> Result<()> {
+pub fn clean(all: bool) -> Result<()> {
     if !all {
         let path = PROJECT_DIRS.data_dir();
         if !resource_exists(path, ResourceType::Dir, false)? {
