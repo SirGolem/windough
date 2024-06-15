@@ -108,7 +108,7 @@ lazy_static! {
             }
         )
         .unwrap_or_else(|| {
-            printerror!("error finding project directory");
+            printerror!("failed to evaluate project directories");
             quit::with_code(1);
         })
     );
