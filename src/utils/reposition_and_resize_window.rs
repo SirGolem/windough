@@ -27,8 +27,6 @@ pub fn reposition_and_resize_window(
     position: &WindowPosition,
     size: &WindowSize,
 ) -> Result<()> {
-    println!("{}", get_module_path_from_window(&hwnd)?);
-
     unsafe {
         if SetWindowPos(
             *hwnd,
